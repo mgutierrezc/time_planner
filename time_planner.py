@@ -1,16 +1,19 @@
 from __future__ import print_function
 from datetime import datetime
 import os.path
+from dateutil.parser import isoparse
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 
-# If modifying these scopes, delete the file token.json.
+# if modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
+# inputting credentials
 creds = None
 
+# checking if credentials previously read
 if os.path.exists('token.json'):
     creds = Credentials.from_authorized_user_file('token.json', SCOPES)
 if not creds or not creds.valid:
@@ -24,6 +27,7 @@ if not creds or not creds.valid:
     with open('token.json', 'w') as token:
         token.write(creds.to_json())
 
+# initializing the calendar service
 service = build('calendar', 'v3', credentials=creds)
 
 # Call the Calendar API
@@ -47,12 +51,16 @@ while True:
 
 events_result = service.events().list(calendarId='primary', timeMin=min_time_formatted,
                                     timeMax=now,
-                                    maxResults=20, singleEvents=True,
+                                    maxResults=2, singleEvents=True,
                                     orderBy='startTime').execute()
 events = events_result.get('items', [])
 
 if not events:
         print('No upcoming events found.')
 for event in events:
-    start = event['start'].get('dateTime', event['start'].get('date'))
-    print(start, event['summary'])
+    #print("event = ", event)
+    # start = event['start'].get('dateTime', event['start'].get('date'))
+    start = event['start'].get('dateTime')
+    end = event['end'].get('dateTime')
+    duration = isoparse(end) - isoparse(start)
+    print(start, end, event['summary'])
