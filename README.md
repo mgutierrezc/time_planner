@@ -11,10 +11,9 @@ Creates a spreadsheet with time spent per project using Google mail and calendar
 ## Setup Instructions
 ### 0. Download the script
 ------------------------------------------------
-1. Check the latest releases of the project [here](https://github.com/mgutierrezc/time_planner/releases)
-2. Downlaod the latest one by clicking on Assets > Source code (zip)
-3. Unpack the files on the folder of your preference
-4. Install the requirements 
+1. Download the latest one by clicking on Assets > Source code (zip)
+2. Unpack the files on the folder of your preference
+3. Install the requirements 
     1. Install Python
     2. Install required packages
         1. Open a console
