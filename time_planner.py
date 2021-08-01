@@ -237,7 +237,7 @@ class CalendarGatherer(GoogleInfoGatherer):
         # creating dict with event information for excel
         parsed_events = {}
         parsed_events["Project"] = []
-        parsed_events["Time spent (hours)"] = []
+        parsed_events["Time spent (hours:minutes)"] = []
         
         # checking time spent per project
         for project in search_results:
@@ -249,8 +249,11 @@ class CalendarGatherer(GoogleInfoGatherer):
                 for event in search_results[project]["events"]: # calculating total time spent per project
                     project_time_spent += event["duration"]
                 
-                hours, reminder = divmod(project_time_spent.seconds, 3600)
-                parsed_events["Time spent (hours)"].append(hours)
+                hours, reminder_minutes = divmod(project_time_spent.seconds, 3600)
+                minutes = reminder_minutes/60
+
+                parsed_time = str(hours)+":"+str(minutes)
+                parsed_events["Time spent (hours)"].append(parsed_time)
             
             else:
                 print(f"IMPORTANTE: No se han encontrado resultados para el proyecto {project}.")
