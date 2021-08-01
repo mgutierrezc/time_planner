@@ -131,3 +131,10 @@ dmypy.json
 # Specific credentials data
 credentials.json
 token.json
+
+# Data files
+*.xls
+*.xlsx
+*.xlsx#
+*.csv
+*.dta
