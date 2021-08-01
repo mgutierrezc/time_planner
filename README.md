@@ -4,7 +4,25 @@
 ## Description
 Creates a spreadsheet with time spent per project using Google mail and calendar data
 
+## Prerequisites
+1. Python 3.x. Download link [here](https://www.python.org/downloads/)
+2. Check `requirements.txt` for Python package requirements
+
 ## Setup Instructions
+### 0. Download the script
+------------------------------------------------
+1. Check the latest releases of the project [here](https://github.com/mgutierrezc/time_planner/releases)
+2. Downlaod the latest one by clicking on Assets > Source code (zip)
+3. Unpack the files on the folder of your preference
+4. Install the requirements 
+    1. Install Python
+    2. Install required packages
+        1. Open a console
+            1. On Windows, click on the Windows Icon, search for `cmd` and open it
+            2. On Mac/Ubuntu, search for `terminal` and open it
+        2. Copy the path where you downloaded the script (e.g. `D:\Archivos de programa\folder_with_script`)
+        3. Use this command on the console with the path where you downloaded the Script: `cd "D:\Archivos de programa\folder_with_script"`
+        4. Run `pip install -r requirements.txt`
 
 ### 1. Create a new Google Cloud Platform (GCP) project
 ------------------------------------------------
@@ -43,3 +61,15 @@ To use Google Workspace APIs, you need a Google Cloud Platform project. This pro
 8. The credentials page will appear again. Search for your newly created credentials in the OAuth 2.0 Client IDs
 9. Click on the Download icon at the right of your credentials name
 10. Change it's name to `credentials` and store it on the same folder of this script
+
+### 4. Run the script
+-----------------------------
+
+1. Install the prerequisites
+2. Open a console
+    1. On Windows, click on the Windows Icon, search for `cmd` and open it
+    2. On Mac/Ubuntu, search for `terminal` and open it
+3. Copy the path where you downloaded the script (e.g. `D:\Archivos de programa\folder_with_script`)
+4. Use this command on the console with the path where you downloaded the Script: `cd "D:\Archivos de programa\folder_with_script"`
+5. Run `python time_planner.py`
+6. Follow the instructions given by the script
