@@ -60,7 +60,7 @@ To use Google Workspace APIs, you need a Google Cloud Platform project. This pro
 6. Choose a name of your preference and click on Create
 8. The credentials page will appear again. Search for your newly created credentials in the OAuth 2.0 Client IDs
 9. Click on the Download icon at the right of your credentials name
-10. Change it's name to `credentials` and store it on the same folder of this script
+10. Change it's name to `credentials` and store it on the same folder where you downloaded this script
 
 ### 4. Run the script
 -----------------------------
