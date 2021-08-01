@@ -127,3 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Specific credentials data
+credentials.json
+token.json
+
+# Data files
+*.xls
+*.xlsx
+*.xlsx#
+*.csv
+*.dta
