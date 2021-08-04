@@ -60,28 +60,18 @@ class GoogleInfoGatherer:
                 token.write(creds.to_json())
 
         return creds
-
-
-class CalendarGatherer(GoogleInfoGatherer):
-    """
-    Gathers and process information from Google Calendar
-    """
-
-    def __init__(self, credentials, token):
-        super().__init__(credentials, token)
-        self.last_searched_results = None # list that stores latest searched items
-
-    def initializing_service(self):
+    
+    def initializing_service(self, service, version):
         """
-        Initializes calendar service and returns it ready for usage
+        Initializes Google service and returns it ready for usage
 
-        Input: None
+        Input: service name (str), version (str)
         Output: Service build
         """
         creds = self.credential_reader()
 
         # initializing the calendar service
-        return build('calendar', 'v3', credentials=creds)
+        return build(service, version, credentials=creds)
 
     def initial_final_dates(self):
         """
@@ -126,7 +116,18 @@ class CalendarGatherer(GoogleInfoGatherer):
     
         return min_time_formatted, max_time_formatted
 
-    def get_events(self):
+
+class CalendarGatherer(GoogleInfoGatherer):
+    """
+    Gathers and process information from Google Calendar
+    """
+
+    def __init__(self, credentials, token):
+        super().__init__(credentials, token)
+        self.last_searched_results = None # list that stores latest searched items
+
+
+    def get_events(self, min_time=None, max_time=None):
         """
         Gets events in specified time frame
 
@@ -134,8 +135,11 @@ class CalendarGatherer(GoogleInfoGatherer):
         Output: List of event objects during period
         """
 
-        service = self.initializing_service()
-        min_time, max_time = self.initial_final_dates()
+        service = self.initializing_service('calendar', 'v3')
+
+        # if min/max time not inputted, ask user
+        if min_time == None or max_time==None:
+            min_time, max_time = self.initial_final_dates()
 
         events_result = service.events().list(calendarId='primary', timeMin=min_time,
                                             timeMax=max_time, singleEvents=True,
@@ -223,7 +227,6 @@ class CalendarGatherer(GoogleInfoGatherer):
 
         return event_dict
 
-    # TODO: format excel exported values
     def project_time_exporter(self, search_results):
         """
         Exports gathered data from project events into an Excel spreadsheet.
@@ -253,7 +256,7 @@ class CalendarGatherer(GoogleInfoGatherer):
                 minutes = reminder_minutes/60
 
                 parsed_time = str(hours)+":"+str(minutes)
-                parsed_events["Time spent (hours)"].append(parsed_time)
+                parsed_events["Time spent (hours:minutes)"].append(parsed_time)
             
             else:
                 print(f"IMPORTANTE: No se han encontrado resultados para el proyecto {project}.")
@@ -261,7 +264,27 @@ class CalendarGatherer(GoogleInfoGatherer):
 
         # exporting results to excel
         results_db = pd.DataFrame.from_dict(parsed_events)
-        results_db.to_excel("Time_spent_on_projects.xlsx", sheet_name="Time_spent", index=False)
+        return results_db
+        #results_db.to_excel("Time_spent_on_projects.xlsx", sheet_name="Time_spent", index=False)
+
+
+class GmailGatherer(GoogleInfoGatherer):
+    def __init__(self, credentials, token):
+        super().__init__(credentials, token)
+        self.last_searched_results = None # list that stores latest searched items
+    
+    def search_emails(self, min_time=None, max_time=None):
+        """
+        Searches for all emails in a given time frame
+        """
+
+        service = self.initializing_service('gmail', 'v1')
+
+        # if min/max time not inputted, ask user
+        if min_time == None or max_time==None:
+            min_time, max_time = self.initial_final_dates()
+
+        mail_result = service.users().search_messages().execute()
 
 # initializing calendar gatherer and exporting results
 user_calendar = CalendarGatherer("credentials.json", "token.json")
