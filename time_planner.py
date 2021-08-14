@@ -115,6 +115,9 @@ class GoogleInfoGatherer:
             else:
                 break
     
+        self.initial_form_date = min_time_formatted
+        self.final_form_date = max_time_formatted
+        
         return min_time_formatted, max_time_formatted
 
 
@@ -179,8 +182,6 @@ class CalendarGatherer(GoogleInfoGatherer):
             formatted_events.append(current_event)
 
         self.last_searched_results = formatted_events # storing last search in attribute 
-        self.initial_form_date = min_time
-        self.final_form_date = max_time
         return formatted_events
 
     # TODO: add special character cleaning for events and keywords
