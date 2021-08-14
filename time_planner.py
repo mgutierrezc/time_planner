@@ -13,6 +13,7 @@ excel spreadsheet
 from __future__ import print_function
 from datetime import datetime, timedelta
 import pandas as pd
+from calendar import month_name
 import os.path
 from dateutil.parser import isoparse
 from googleapiclient.discovery import build
@@ -125,7 +126,8 @@ class CalendarGatherer(GoogleInfoGatherer):
     def __init__(self, credentials, token):
         super().__init__(credentials, token)
         self.last_searched_results = None # list that stores latest searched items
-
+        self.initial_form_date = None # formatted initial date
+        self.final_form_date = None # formatted initial date
 
     def get_events(self, min_time=None, max_time=None):
         """
@@ -174,11 +176,11 @@ class CalendarGatherer(GoogleInfoGatherer):
             else:
                 current_event['description'] = ""
 
-            # print(start, end, event['summary'])
-            
             formatted_events.append(current_event)
 
         self.last_searched_results = formatted_events # storing last search in attribute 
+        self.initial_form_date = min_time
+        self.final_form_date = max_time
         return formatted_events
 
     # TODO: add special character cleaning for events and keywords
@@ -187,7 +189,7 @@ class CalendarGatherer(GoogleInfoGatherer):
         Searches for events with an specific keyword
 
         Input: User project name, user keywords per project
-        Output: List with user events
+        Output: Dict with user events {'project_title': [event_1, event_2, ...]}
         """
 
         event_dict = {}
@@ -265,30 +267,13 @@ class CalendarGatherer(GoogleInfoGatherer):
         # exporting results to excel
         results_db = pd.DataFrame.from_dict(parsed_events)
         return results_db
-        #results_db.to_excel("Time_spent_on_projects.xlsx", sheet_name="Time_spent", index=False)
 
-
-class GmailGatherer(GoogleInfoGatherer):
-    def __init__(self, credentials, token):
-        super().__init__(credentials, token)
-        self.last_searched_results = None # list that stores latest searched items
-    
-    def search_emails(self, min_time=None, max_time=None):
-        """
-        Searches for all emails in a given time frame
-        """
-
-        service = self.initializing_service('gmail', 'v1')
-
-        # if min/max time not inputted, ask user
-        if min_time == None or max_time==None:
-            min_time, max_time = self.initial_final_dates()
-
-        mail_result = service.users().search_messages().execute()
 
 # initializing calendar gatherer and exporting results
 user_calendar = CalendarGatherer("credentials.json", "token.json")
-user_calendar_events = user_calendar.search_events_keywords()
+initial_date, final_date, user_calendar_events = user_calendar.search_events_keywords()
+print(initial_date)
+print(final_date)
 results = user_calendar.project_time_exporter(user_calendar_events)
 
 results.to_excel("Time_spent_on_projects.xlsx", sheet_name="Time_spent", index=False)
