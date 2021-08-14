@@ -289,4 +289,6 @@ class GmailGatherer(GoogleInfoGatherer):
 # initializing calendar gatherer and exporting results
 user_calendar = CalendarGatherer("credentials.json", "token.json")
 user_calendar_events = user_calendar.search_events_keywords()
-user_calendar.project_time_exporter(user_calendar_events)
+results = user_calendar.project_time_exporter(user_calendar_events)
+
+results.to_excel("Time_spent_on_projects.xlsx", sheet_name="Time_spent", index=False)
