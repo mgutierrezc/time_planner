@@ -21,6 +21,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 
+
 # if modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
@@ -103,7 +104,7 @@ class GoogleInfoGatherer:
 
             try:
                 if max_time == "ahora":
-                    max_time_formatted = datetime.utcnow().isoformat() # 'Z' indicates UTC time
+                    max_time_formatted = datetime.utcnow().isoformat() + "-05:00" # 'Z' indicates UTC time
 
                 else: 
                     max_time_formatted = datetime.strptime(max_time, '%d/%m/%Y').isoformat() + "-05:00"
@@ -265,17 +266,47 @@ class CalendarGatherer(GoogleInfoGatherer):
                 for event in search_results[project]["events"]:                    
                     # calculating total time spent per project on a specific day
                     initial_date = isoparse(event["start"]).strftime("%d-%m")
-                    print(f"cell {initial_date} initial val = ", projects_db.at[project, initial_date])
                     projects_db.at[project, initial_date] += event["duration"] 
-                    print(f"cell {initial_date} final val = ", projects_db.at[project, initial_date])
-
+        
         # formatting time spent on project as hours           
         projects_db = projects_db.applymap(lambda cell: divmod(cell.seconds, 3600)[0])
-        # TODO: change current day to weekday and time labor format
+        
+        
+        # changing current day to weekday and time labor format
+        current_columns = list(projects_db.columns)
+        
+        # concatenating year
+        current_year = str(datetime.today().year)
+        current_columns = [day+f"-{current_year}" for day in current_columns] 
+
+        # checking if date is weekday
+        evaluated_dates = [datetime.strptime(day, "%d-%m-%Y") for day in current_columns]
+        evaluated_dates = [[day, day.weekday()] for day in evaluated_dates]
+
+        # changing day to weekend when that's the case
+        evaluated_dates = [day[0].strftime("%d-%m") if day[1]<5 else "weekend" for day in evaluated_dates]
+
+        # changing month from num to month name
+        final_dates = []
+        for date in evaluated_dates:
+            date = date.split("-")
+            if len(date) == 2:
+                # get month
+                month = date[1]
+                month = month_name[int(month)][:3]
                 
+                final_dates.append(date[0] + "-" + month)
+            else:
+                final_dates.append(date[0])
+
+        # updating columns
+        projects_db.columns = final_dates
+
+        # changing weekend values to empty
+        projects_db["weekend"] = ""
+
         print("all output: ", projects_db)
         return projects_db
-
 
 # initializing calendar gatherer and exporting results
 user_calendar = CalendarGatherer("credentials.json", "token.json")
