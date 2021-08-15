@@ -87,9 +87,9 @@ class GoogleInfoGatherer:
             min_time = input("Por favor, ingrese una fecha inicial con el siguiente formato (dd/mm/aaaa): ")
 
             try:
-                min_time_formatted = datetime.strptime(min_time, '%d/%m/%Y').isoformat() + 'Z'
+                min_time_formatted = datetime.strptime(min_time, '%d/%m/%Y').isoformat() + "-05:00"
                 min_time_type = type(min_time_formatted)
-
+                
             except ValueError:
                 print("No ha ingresado una fecha en el formato correcto. \nPor favor, vuelva a intentarlo")
 
@@ -103,10 +103,10 @@ class GoogleInfoGatherer:
 
             try:
                 if max_time == "ahora":
-                    max_time_formatted = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+                    max_time_formatted = datetime.utcnow().isoformat() # 'Z' indicates UTC time
 
                 else: 
-                    max_time_formatted = datetime.strptime(max_time, '%d/%m/%Y').isoformat() + 'Z'
+                    max_time_formatted = datetime.strptime(max_time, '%d/%m/%Y').isoformat() + "-05:00"
                     max_time_type = type(max_time_formatted)
 
             except ValueError:
@@ -154,6 +154,7 @@ class CalendarGatherer(GoogleInfoGatherer):
 
         if not events:
             print('No se encontraron eventos.')
+        
         for event in events:
             
             current_event = {}
@@ -170,7 +171,7 @@ class CalendarGatherer(GoogleInfoGatherer):
             duration = isoparse(end) - isoparse(start)
             current_event['duration'] = duration 
 
-            # summary
+            # summary (title)
             current_event['summary'] = event['summary']
 
             # description (if any)
@@ -219,10 +220,8 @@ class CalendarGatherer(GoogleInfoGatherer):
                 for event in self.last_searched_results:
                     # checking if event has keyword on summary or description
                     for keyword in parsed_keywords:
-                        if keyword in event["summary"]:
-                            project["events"].append(event)
-                        
-                        elif keyword in event["description"]:
+                        if (keyword in event["summary"] or keyword in event["description"])\
+                            and event not in project["events"]:
                             project["events"].append(event)
 
             else:
@@ -241,40 +240,46 @@ class CalendarGatherer(GoogleInfoGatherer):
         """
 
         # creating dict with event information for excel
-        parsed_events = {}
-        parsed_events["Project"] = []
-        parsed_events["Time spent (hours:minutes)"] = []
-        
+        list_of_projects = []
+
+        # appending projects
+        for project in search_results:
+            list_of_projects.append(project) # creating project entry
+
+        # initializing dataframe for storing info
+        projects_db = pd.DataFrame(index=list_of_projects)
+
+        # creating entries per day
+        search_length = isoparse(self.final_form_date) - isoparse(self.initial_form_date)
+        for day in range(search_length.days + 1):
+            date = isoparse(self.initial_form_date) + timedelta(days=day)
+            string_date = date.strftime("%d-%m")
+
+            projects_db[string_date] = timedelta(0) # column with zeros per date
+            
         # checking time spent per project
         for project in search_results:
-            if search_results[project]["events"]: # if events where found for project
-
-                parsed_events["Project"].append(project) # creating project entry
-                project_time_spent = timedelta(seconds=0)
-
-                for event in search_results[project]["events"]: # calculating total time spent per project
-                    project_time_spent += event["duration"]
-                
-                hours, reminder_minutes = divmod(project_time_spent.seconds, 3600)
-                minutes = reminder_minutes/60
-
-                parsed_time = str(hours)+":"+str(minutes)
-                parsed_events["Time spent (hours:minutes)"].append(parsed_time)
+            # current_row = projects_db.loc[projects_db["Project"] == project]
             
-            else:
-                print(f"IMPORTANTE: No se han encontrado resultados para el proyecto {project}.")
-                break
+            if search_results[project]["events"]: # if events where found for project                                
+                for event in search_results[project]["events"]:                    
+                    # calculating total time spent per project on a specific day
+                    initial_date = isoparse(event["start"]).strftime("%d-%m")
+                    print(f"cell {initial_date} initial val = ", projects_db.at[project, initial_date])
+                    projects_db.at[project, initial_date] += event["duration"] 
+                    print(f"cell {initial_date} final val = ", projects_db.at[project, initial_date])
 
-        # exporting results to excel
-        results_db = pd.DataFrame.from_dict(parsed_events)
-        return results_db
+        # formatting time spent on project as hours           
+        projects_db = projects_db.applymap(lambda cell: divmod(cell.seconds, 3600)[0])
+        # TODO: change current day to weekday and time labor format
+                
+        print("all output: ", projects_db)
+        return projects_db
 
 
 # initializing calendar gatherer and exporting results
 user_calendar = CalendarGatherer("credentials.json", "token.json")
-initial_date, final_date, user_calendar_events = user_calendar.search_events_keywords()
-print(initial_date)
-print(final_date)
+user_calendar_events = user_calendar.search_events_keywords()
 results = user_calendar.project_time_exporter(user_calendar_events)
 
-results.to_excel("Time_spent_on_projects.xlsx", sheet_name="Time_spent", index=False)
+results.to_excel("Time_spent_on_projects.xlsx", sheet_name="Time_spent")
