@@ -312,5 +312,5 @@ class CalendarGatherer(GoogleInfoGatherer):
 user_calendar = CalendarGatherer("credentials.json", "token.json")
 user_calendar_events = user_calendar.search_events_keywords()
 results = user_calendar.project_time_exporter(user_calendar_events)
-
+results["Total"] = results.sum(axis=1)
 results.to_excel("Time_spent_on_projects.xlsx", sheet_name="Time_spent")
